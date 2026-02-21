@@ -1,0 +1,147 @@
+% Clean LaTeX: Mathematical formulation for hospital models (Original + Optimized)
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\begin{document}
+
+\section{Mathematical Formulation}
+
+\subsection{Original System Model}
+
+\paragraph{Sets}
+\begin{align*}
+\mathcal{D} &= \{\text{ER}, \text{SURG}, \text{ICU}, \text{SD}\} \\
+\mathcal{T} &= \{1,\dots,T\} \\
+\mathcal{A} &= \{(i,j): i,j \in \mathcal{D}, \text{ feasible patient transitions}\}
+\end{align*}
+
+\paragraph{Parameters}
+\begin{align*}
+R_d &:\; \text{room capacity in department } d, \\
+S_d &:\; \text{permanent staff capacity in department } d, \\
+\gamma_d &:\; \text{ready-out discharge limit per hour in } d, \\
+c_d^{wait} &:\; \text{waiting cost per patient-hour in } d, \\
+c^{temp} &:\; \text{temporary staff cost per unit}, \\
+c^{div} &:\; \text{ambulance diversion cost}, \\
+W_{dt} &:\; \text{walk-in arrivals to } d \text{ at time } t, \\
+A_t &:\; \text{ambulance arrivals at time } t.
+\end{align*}
+
+\paragraph{Decision Variables}
+\begin{align*}
+x_{dt} &:\; \text{patients in department } d \text{ at end of time } t, \\
+w_{dt} &:\; \text{patients waiting in } d \text{ at end of time } t, \\
+u_{dt} &:\; \text{patients admitted into } d \text{ at time } t, \\
+f_{ijdt} &:\; \text{patients transferred from } i \text{ to } j \text{ at time } t, \\
+y_{dt} &:\; \text{temporary staff in } d \text{ at time } t, \\
+a_t &:\; \text{ambulance patients admitted at time } t, \\
+v_t &:\; \text{ambulance patients diverted at time } t.
+\end{align*}
+
+\paragraph{Objective}
+\begin{align}
+\min \sum_{t \in \mathcal{T}} \Bigg[
+\sum_{d \in \mathcal{D}} \left( c_d^{wait} w_{dt} + c^{temp} y_{dt} \right) + c^{div} v_t \Bigg].
+\end{align}
+
+\paragraph{Constraints}
+
+Ambulance balance:
+\begin{align}
+a_t + v_t = A_t, \quad \forall t.
+\end{align}
+
+Admission feasibility:
+\begin{align}
+u_{ER,t} &\le w_{ER,t-1} + W_{ER,t} + a_t, \\
+u_{dt} &\le w_{d,t-1} + W_{d,t}, \quad \forall d \neq \text{ER}.
+\end{align}
+
+Flow conservation (patients):
+\begin{align}
+x_{dt} &= x_{d,t-1} + u_{dt} + \sum_{i:(i,d)\in\mathcal{A}} f_{ijdt} - \sum_{j:(d,j)\in\mathcal{A}} f_{djdt}, \quad \forall d,t.
+\end{align}
+
+Ready-out limits:
+\begin{align}
+\sum_{j:(d,j)\in\mathcal{A}} f_{djdt} \le \gamma_d, \quad \forall d,t.
+\end{align}
+
+Room capacity:
+\begin{align}
+x_{dt} \le R_d, \quad \forall d,t.
+\end{align}
+
+Staffing feasibility (1:1 ratio):
+\begin{align}
+x_{dt} \le S_d + y_{dt}, \quad \forall d,t.
+\end{align}
+
+Waiting update:
+\begin{align}
+w_{ER,t} &= w_{ER,t-1} + W_{ER,t} + a_t - u_{ER,t}, \\
+w_{dt} &= w_{d,t-1} + W_{d,t} - u_{dt}, \quad \forall d \neq \text{ER}.
+\end{align}
+
+\clearpage
+\subsection{Optimized System Model (with Triage)}
+
+The optimized model extends the baseline formulation by introducing a triage buffer layer, patient classification, admission caps, and controlled ER double-bunking.
+
+\paragraph{Additional Parameters}
+\begin{align*}
+R^{tri} &:\; \text{triage bed capacity}, \\
+S^{tri} &:\; \text{permanent triage staff}, \\
+c^{triwait} &:\; \text{triage waiting cost}, \\
+c^{double} &:\; \text{double-bunk congestion penalty}, \\
+\bar{u}_d &:\; \text{admission cap per hour in } d.
+\end{align*}
+
+\paragraph{Additional Decision Variables}
+\begin{align*}
+z_t &:\; \text{patients in triage beds}, \\
+\tilde{w}_t &:\; \text{patients waiting in triage}, \\
+\ell_t &:\; \text{low-acuity patients released}, \\
+h_t^{ER} &:\; \text{high-acuity routed to ER}, \\
+h_t^{dir} &:\; \text{high-acuity routed directly to ICU/SURG}, \\
+y_t^{tri} &:\; \text{temporary triage staff}, \\
+\delta_t &:\; \text{ER overflow above base capacity}.
+\end{align*}
+
+\paragraph{Extended Objective}
+\begin{align}
+\min \sum_{t \in \mathcal{T}} \Bigg[ \sum_{d \in \mathcal{D}} \left( c_d^{wait} w_{dt} + c^{temp} y_{dt} \right) + c^{triwait} \tilde{w}_t + c^{temp} y_t^{tri} + c^{double} \delta_t \Bigg].
+\end{align}
+
+\paragraph{Additional Constraints}
+
+Triage classification:
+\begin{align}
+\ell_t + h_t^{ER} + h_t^{dir} = z_t, \quad \forall t.
+\end{align}
+
+Admission caps:
+\begin{align}
+u_{dt} \le \bar{u}_d, \quad \forall d,t.
+\end{align}
+
+Controlled ER double-bunking:
+\begin{align}
+x_{ER,t} \le 2R_{ER}, \quad \forall t.
+\end{align}
+
+Overflow tracking:
+\begin{align}
+\delta_t \ge x_{ER,t} - R_{ER}, \quad \forall t.
+\end{align}
+
+Triage staffing:
+\begin{align}
+z_t + \tilde{w}_t \le 3 (S^{tri} + y_t^{tri}), \quad \forall t.
+\end{align}
+
+\vspace{6pt}
+\noindent Generated from `1.ipynb` model code: original and optimized triage-based implementations.
+
+\end{document}
