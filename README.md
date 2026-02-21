@@ -3,12 +3,9 @@
 This folder contains the MIP models, sensitivity analysis, and LaTeX formulation for the hospital flow project used in MSE 433.
 
 Contents
-- `1.ipynb` — primary notebook with model code and example runs.
+- `Simulation model.ipynb` — primary notebook with model code and example runs.
 - `hospital_mip.tex` — Overleaf-ready LaTeX file with the Original and Optimized MIP formulations.
-- `sensitivity.py` — script that runs the Gurobi MIP sweeps (used to produce `sensitivity_results.csv`).
-- `sensitivity_results.csv` — CSV output from the most recent sensitivity run.
-- `generate_plots.py` — script to convert the CSV into PNG visualizations (produces `outputs/`).
-- `outputs/` — contains generated PNGs and `summary.md` (plots created from `sensitivity_results.csv`).
+
 
 Quick notes
 - To regenerate sensitivity results locally you need a Gurobi license and Python packages used in `1.ipynb`.
